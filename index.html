@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pixel Rocket Dodge</title>
+<style>
+  body { margin:0; background:black; display:flex; justify-content:center; align-items:center; height:100vh; }
+  canvas { border:3px solid lime; image-rendering:pixelated; }
+  #menu { position:absolute; color:lime; text-align:center; display:none; }
+  button { background:black; color:lime; border:2px solid lime; padding:10px 20px; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<div id="menu">
+  <h1>GAME OVER</h1>
+  <p id="finalScore"></p>
+  <button onclick="restartGame()">Restart</button>
+</div>
+
+<canvas id="game" width="400" height="600"></canvas>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const menu = document.getElementById('menu');
+const finalScoreText = document.getElementById('finalScore');
+
+let rocket, debris, score, highScore, worldHighScore, gameOver;
+
+worldHighScore = 9999; // demo world high score
+highScore = localStorage.getItem('rocketHigh') || 0;
+
+function init(){
+  rocket = { x:190, y:500, w:20, h:30, speed:5 };
+  debris = [];
+  score = 0;
+  gameOver = false;
+  menu.style.display='none';
+}
+
+function drawRocket(){
+  ctx.fillStyle='#f00'; ctx.fillRect(rocket.x+6,rocket.y,8,20); // body
+  ctx.fillStyle='#fff'; ctx.fillRect(rocket.x,rocket.y+10,6,10); // left wing
+  ctx.fillRect(rocket.x+14,rocket.y+10,6,10); // right wing
+  ctx.fillStyle='#ff0'; ctx.fillRect(rocket.x+6,rocket.y+20,8,10); // flame
+}
+
+function spawnDebris(){
+  debris.push({x:Math.random()*380,y:-20,size:20,speed:3+Math.random()*3});
+}
+
+function updateDebris(){
+  for(let i=debris.length-1;i>=0;i--){
+    debris[i].y+=debris[i].speed;
+    if(debris[i].x<rocket.x+rocket.w && debris[i].x+debris[i].size>rocket.x &&
+       debris[i].y<rocket.y+rocket.h && debris[i].y+debris[i].size>rocket.y){ endGame(); }
+    if(debris[i].y>canvas.height) debris.splice(i,1);
+  }
+}
+
+function drawDebris(){ ctx.fillStyle='#888'; debris.forEach(d=>ctx.fillRect(d.x,d.y,d.size,d.size)); }
+
+function drawHUD(){
+  ctx.fillStyle='lime'; ctx.font='16px monospace';
+  ctx.fillText('Score: '+score,10,20);
+  ctx.fillText('High: '+highScore,10,40);
+  ctx.fillText('World: '+worldHighScore,10,60);
+}
+
+function endGame(){
+  gameOver=true;
+  if(score>highScore){ highScore=score; localStorage.setItem('rocketHigh',highScore); }
+  finalScoreText.innerText=`Your Score: ${score} | High: ${highScore} | World: ${worldHighScore}`;
+  menu.style.display='block';
+}
+
+function restartGame(){ init(); gameLoop(); }
+
+function gameLoop(){
+  if(gameOver) return;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawRocket();
+  drawDebris();
+  updateDebris();
+  drawHUD();
+  score++;
+  if(Math.random()<0.03) spawnDebris();
+  requestAnimationFrame(gameLoop);
+}
+
+window.addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft' && rocket.x>0) rocket.x-=rocket.speed;
+  if(e.key==='ArrowRight' && rocket.x<canvas.width-rocket.w) rocket.x+=rocket.speed;
+});
+
+init();
+gameLoop();
+</script>
+
+</body>
+</html>
