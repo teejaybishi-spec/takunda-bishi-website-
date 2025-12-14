@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dodge Game</title>
+    <style>
+        body {
+            background: black;
+            color: white;
+            text-align: center;
+            font-family: Arial;
+        }
+        canvas {
+            background: #111;
+            display: block;
+            margin: auto;
+            border: 2px solid white;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Dodge the Blocks</h2>
+<p>Use LEFT and RIGHT arrow keys</p>
+
+<canvas id="game" width="400" height="400"></canvas>
+
+<script>
+    var canvas = document.getElementById("game");
+    var ctx = canvas.getContext("2d");
+
+    var player = {
+        x: 180,
+        y: 360,
+        width: 40,
+        height: 20,
+        speed: 5
+    };
+
+    var blocks = [];
+    var score = 0;
+    var gameOver = false;
+
+    document.addEventListener("keydown", function(e) {
+        if (e.key === "ArrowLeft" && player.x > 0) {
+            player.x -= player.speed;
+        }
+        if (e.key === "ArrowRight" && player.x < 360) {
+            player.x += player.speed;
+        }
+    });
+
+    function spawnBlock() {
+        blocks.push({
+            x: Math.random() * 360,
+            y: 0,
+            size: 20,
+            speed: 3
+        });
+    }
+
+    function update() {
+        if (gameOver) return;
+
+        ctx.clearRect(0, 0, 400, 400);
+
+        // Draw player
+        ctx.fillStyle = "lime";
+        ctx.fillRect(player.x, player.y, player.width, player.height);
+
+        // Draw blocks
+        ctx.fillStyle = "red";
+        for (var i = 0; i < blocks.length; i++) {
+            blocks[i].y += blocks[i].speed;
+            ctx.fillRect(blocks[i].x, blocks[i].y, 20, 20);
+
+            // Collision check
+            if (
+                blocks[i].x < player.x + player.width &&
+                blocks[i].x + 20 > player.x &&
+                blocks[i].y < player.y + player.height &&
+                blocks[i].y + 20 > player.y
+            ) {
+                gameOver = true;
+                alert("Game Over! Score: " + score);
+                location.reload();
+            }
+        }
+
+        score++;
+        ctx.fillStyle = "white";
+        ctx.fillText("Score: " + score, 10, 20);
+
+        requestAnimationFrame(update);
+    }
+
+    setInterval(spawnBlock, 800);
+    update();
+</script>
+
+</body>
+</html>
